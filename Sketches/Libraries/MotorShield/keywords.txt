@@ -1,0 +1,16 @@
+#######################################
+# Syntax Coloring Map For MotorShield
+#######################################
+#
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+#
+MotorShield	KEYWORD1
+#
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+#
+motorsRun	KEYWORD2
+motorsStop	KEYWORD2
