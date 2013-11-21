@@ -4,7 +4,7 @@
 #include "Arduino.h"
 
 #define SENSOR_COUNT 5
-#define SAMPLE_SIZE 5
+#define SAMPLE_SIZE 10
 
 uint8_t SENSOR_PINS[] = {A0, A1, A2, A3, A4};
 volatile int SENSOR_OFFSETS[] = {0, 0, 0, 0, 0};
@@ -20,7 +20,7 @@ void initSensorPins(){
 
 void readSensorsRaw(){
   for (int i = 0; i < SENSOR_COUNT; i++){
-    SENSOR_VALS[i] = analogRead(SENSOR_PINS[i]);
+    SENSOR_VALS[i] = analogRead(SENSOR_PINS[i]) - SENSOR_OFFSETS[i];
   }
 }
 
@@ -77,23 +77,15 @@ int getMaxVal(volatile int vals[]){
 
 
 void calibrateSensors(){
-  for (int i = SAMPLE_SIZE; i >= 0; i--) {
+  
+  for (int i = 0; i < SENSOR_COUNT; i++) {
+    long total = 0;
     readSensorsRaw();
-    for(int k = 0; k < SENSOR_COUNT; k++){
-      SENSOR_OFFSETS[k] += SENSOR_VALS[k];
+    for(int k = 0; k < SAMPLE_SIZE; k++){
+      total += analogRead(SENSOR_PINS[i]);
     }
+    SENSOR_OFFSETS[i] = floor(total/SAMPLE_SIZE);
   }
-  
-  for (int i = 0; i < SENSOR_COUNT; i++){
-    SENSOR_OFFSETS[i] = SENSOR_OFFSETS[i] / SAMPLE_SIZE;
-  }
-  
-  int lowest = getMinVal(SENSOR_OFFSETS);
-  
-  for (int i = 0; i < SENSOR_COUNT; i++){
-    SENSOR_OFFSETS[i] = SENSOR_OFFSETS[i] - lowest;
-  }
-  
 }
 
 

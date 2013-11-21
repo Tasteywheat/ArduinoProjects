@@ -4,18 +4,19 @@
 #include "Arduino.h"
 #include "LineSensor.h"
 //#define DEBUG
-#define CENTER 0
+#define CENTER 300
 #define MAX_SPD 70
 #define MAX_TRN 50
 
 int RATES[] = {-4000, -2250, -1000, -250, 0, 250, 1000, 2250, 4000};
 
 
+
 double linePos = CENTER;
 double line_value = 0;
 double turn_power = 0;
 double drive_power = 0;
-double turnGoal = CENTER;
+double turnGoal = 0;
 double driveGoal = CENTER;
 
 
@@ -24,7 +25,7 @@ int start = 0;
 int delta = 0;
 int period = 10;
 volatile int lastLinePos = 0;
-int low_threshold = 690;
+int low_threshold = 650;
 int high_threshold = 800;
 /*
 **** Linear Rates ********* Order of best performance
@@ -44,7 +45,7 @@ double kd = 0.007;
 
 double kp = 0.0125;
 double ki = 0.025;
-double kd = 0.0045;
+double kd = 0.01;
 
 PID turnPID(&line_value, &turn_power, &turnGoal, kp, ki, kd, DIRECT);
 //PID drivePID(&linePos, &drive_power, &driveGoal, kp, ki, kd, DIRECT);
@@ -59,7 +60,7 @@ void setup(){
   #endif
   SWSerial.begin(9600);
   initSensorPins();
-  
+//  calibrateSensors();
   turnPID.SetMode(AUTOMATIC);
   turnPID.SetSampleTime(10);
   turnPID.SetOutputLimits(-MAX_TRN + 7, MAX_TRN);
@@ -95,12 +96,25 @@ void loop(){
     }
     
     line_value = getLineRate(linePos);
-
-   
+    
+    drive_power = MAX_SPD;
+    
+//    if(line_value == RATES[2] || line_value == RATES[6])
+//      drive_power = MAX_SPD - 10;  
+    
+//    if(line_value == RATES[1] || line_value == RATES[7])
+//      drive_power = MAX_SPD - 20;
+    
+//    if(line_value == RATES[0] || line_value == RATES[8])
+//      drive_power = MAX_SPD - 20;  
+    kp = 0.0125;  
+    if((line_value >= RATES[3]) &&(line_value <= RATES[5]))
+      kp = 0;
+      
     
     turnPID.Compute();
  //   drivePID.Compute();
-    st.drive(MAX_SPD);
+    st.drive(drive_power);
     st.turn(floor(turn_power));
     
 
@@ -127,11 +141,23 @@ int getLinePos(){
     for (int i = 0; i < SENSOR_COUNT; i++){
       if(SENSOR_VALS[i] == largest) {
         pos = (i + 1) * 1000; 
-        if(largest < high_threshold){
-          if(lastLinePos > pos) pos += 500;
-          if(lastLinePos < pos) pos -= 500;
+        
+        if(i == 0){
+          if(SENSOR_VALS[i+1] > low_threshold)
+            pos += 500;
         }
-              
+        if(i == 4){
+          if(SENSOR_VALS[i-1] > low_threshold)
+            pos -= 500;
+        }
+        if ((i > 0) && (i < 4)){
+          if(SENSOR_VALS[i+1] > low_threshold)
+            pos += 500;
+          
+          if(SENSOR_VALS[i-1] > low_threshold)
+            pos -= 500;
+        }
+      
         break;
       }
     }
