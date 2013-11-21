@@ -4,15 +4,15 @@
 #include "Arduino.h"
 #include "LineSensor.h"
 //#define DEBUG
-#define CENTER 3000
+#define CENTER 0
 #define MAX_SPD 70
-#define MAX_TRN 30
+#define MAX_TRN 50
 
-//int RATES[] = {-4000, -2250, -1000, -250, 0, 250, 1000, 2250, 4000};
+int RATES[] = {-4000, -2250, -1000, -250, 0, 250, 1000, 2250, 4000};
 
 
 double linePos = CENTER;
-//double line_value = 0;
+double line_value = 0;
 double turn_power = 0;
 double drive_power = 0;
 double turnGoal = CENTER;
@@ -46,7 +46,7 @@ double kp = 0.0125;
 double ki = 0.025;
 double kd = 0.0045;
 
-PID turnPID(&linePos, &turn_power, &turnGoal, kp, ki, kd, DIRECT);
+PID turnPID(&line_value, &turn_power, &turnGoal, kp, ki, kd, DIRECT);
 //PID drivePID(&linePos, &drive_power, &driveGoal, kp, ki, kd, DIRECT);
 
 SoftwareSerial SWSerial(NOT_A_PIN, 11); // RX on no pin (unused), TX on pin 11 (to S1).
@@ -94,7 +94,7 @@ void loop(){
       linePos = lastLinePos;                  //  use last good reading
     }
     
-    //line_value = getLineRate(linePos);
+    line_value = getLineRate(linePos);
 
    
     
@@ -108,7 +108,7 @@ void loop(){
   #ifdef DEBUG
     printSensorVals();
     Serial.print(" , ");
-    Serial.print(linePos);
+    Serial.print(line_value);
     Serial.print(" , ");
     Serial.println(turn_power);
   #endif
@@ -139,7 +139,7 @@ int getLinePos(){
   
   return pos;
 }
-/*
+
 int getLineRate(int theLinePos){
   switch(theLinePos){
     case 1000:
@@ -164,4 +164,4 @@ int getLineRate(int theLinePos){
       return -1;
   }
 }
-*/
+
